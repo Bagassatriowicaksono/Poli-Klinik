@@ -43,8 +43,8 @@ Route::middleware(['auth', 'role:admin'])
 
         // CRUD Resource untuk Admin
         Route::resource('polis', PoliController::class);
-        Route::resource('dokters', DokterController::class);
-        Route::resource('pasien', PasienController::class);
+        Route::resource('dokter', DokterController::class);
+        Route::resource('pasien', PasienController::class); // ✅ cukup di sini
         Route::resource('obat', ObatController::class);
     });
 
