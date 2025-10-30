@@ -16,3 +16,51 @@
                 <a href="#" class="d-block">Halo! {{ Auth::user()->nama }}</a>
             </div>
         </div>
+
+        <!-- Sidebar Menu -->
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                
+                {{-- Menu untuk Role Pasien --}}
+                @auth
+                @if(auth()->user()->role === 'pasien')
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('pasien.dashboard') }}">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    {{-- ✅ LINK PENDAFTARAN POLI --}}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('pasien.daftar') }}">
+                            <i class="fas fa-edit"></i>
+                            <span>Daftar Poli</span>
+                        </a>
+                    </li>
+                @endif
+
+                 @if(auth()->user()->role === 'dokter')
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('pasien.dashboard') }}">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    {{-- ✅ LINK PENDAFTARAN POLI --}}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('pasien.daftar') }}">
+                            <i class="fas fa-edit"></i>
+                            <span>Jadwal periksa</span>
+                        </a>
+                    </li>
+                @endif
+                @endauth
+
+                {{-- Tambahkan menu untuk role lain di sini --}}
+                
+            </ul>
+        </nav>
+        <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+</aside>

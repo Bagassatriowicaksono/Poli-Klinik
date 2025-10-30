@@ -2,10 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PoliController;
 use App\Http\Controllers\DokterController;
+use App\Http\Controllers\ObstController;
 use App\Http\Controllers\PasienController;
-use App\Http\Controllers\ObatController;
+use App\Http\Controllers\PolController; // Untuk admin
+use App\Http\Controllers\Pasien\PolController as PasienPolController;
+use App\Http\Controllers\Dokter\JadwalPeriksaController as DokterJadwalPeriksaController;
+use App\Http\Controllers\Dokter\PeriksaPasienController;
+use App\Http\Controllers\Dokter\AlwayatPasienController;
+use App\Http\Controllers\Pasien\PoliController as PasienPoliController; // ✅ Tambahkan ini
 
 // =========================
 // 🌐 ROUTE UTAMA
@@ -68,4 +73,8 @@ Route::middleware(['auth', 'role:pasien'])
         Route::get('/dashboard', function () {
             return view('pasien.dashboard');
         })->name('pasien.dashboard');
+        
+        // ✅ TAMBAHKAN ROUTE PENDAFTARAN POLI UNTUK PASIEN
+        Route::get('/daftar', [PasienPoliController::class, 'get'])->name('pasien.daftar');
+        Route::post('/daftar', [PasienPoliController::class, 'submit'])->name('pasien.daftar.submit');
     });
