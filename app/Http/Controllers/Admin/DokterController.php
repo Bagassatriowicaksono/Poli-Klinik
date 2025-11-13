@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Models\Poli;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 
 class DokterController extends Controller
@@ -73,35 +74,47 @@ class DokterController extends Controller
     /**
      * Update the specified resource in storage.
      * $dokter adalah route model binding jadi yang harus nya kita buat
-     * $dokter = User::findOrFail($id); kita bisa membuat menjadi parameter, 
-     * namun jika menggunakan cara tersebut kita route nya tidak bisa admin/dokter{id}/edit namun 
+     * $dokter = User::findOrFail($id); kita bisa membuat menjadi parameter,
+     * namun jika menggunakan cara tersebut kita route nya tidak bisa admin/dokter{id}/edit namun
      * seperi admin/dokter/{dokter}/edit
      */
 
     public function update(Request $request, User $dokter)
     {
+        // Validasi data
         $request->validate([
-            
-
+            'nama' => 'required|string|max:255',
+            'alamat' => 'required|string',
+            'no_ktp' => 'required|string|max:16|unique:users,no_ktp,' . $dokter->id,
+            'no_hp' => 'required|string|max:15',
+            'id_poli' => 'required|exists:poli,id',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $dokter->id,
+            'password' => 'nullable|string|min:6', // opsional
         ]);
 
+        // Data yang akan diupdate
         $updateData = [
-           
-
+            'nama' => $request->nama,
+            'alamat' => $request->alamat,
+            'no_ktp' => $request->no_ktp,
+            'no_hp' => $request->no_hp,
+            'id_poli' => $request->id_poli,
+            'email' => $request->email,
         ];
 
-        //update password bila password disii
+        // Jika password diisi, update juga
         if ($request->filled('password')) {
-            $dokter->password = Hash::make($request->password);
+            $updateData['password'] = Hash::make($request->password);
         }
 
-        //disimpan
+        // Jalankan update
         $dokter->update($updateData);
 
         return redirect()->route('dokter.index')
-            ->with('message', 'Data Dokter Berhasil di ubah')
-            ->with('type','success');
+            ->with('message', 'Data Dokter Berhasil diubah')
+            ->with('type', 'success');
     }
+
 
     /**
      * Remove the specified resource from storage.
