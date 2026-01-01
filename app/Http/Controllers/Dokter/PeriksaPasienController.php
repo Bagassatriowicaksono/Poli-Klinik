@@ -1,65 +1,89 @@
 <?php
 
-namespace App\Http\Controllers\dokter;
+namespace App\Http\Controllers\Dokter;
 
 use App\Http\Controllers\Controller;
-use App\Models\DaftarPoli;
+use Illuminate\Http\Request;
+use App\Models\Periksa;
 use App\Models\DetailPeriksa;
 use App\Models\Obat;
-use App\Models\Periksa;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\DaftarPoli;
 
 class PeriksaPasienController extends Controller
 {
+    /**
+     * Menampilkan daftar pasien untuk diperiksa
+     */
     public function index()
     {
-        $dokterId = Auth::id();
-
-        $daftarPasien = DaftarPoli::with(['pasien', 'jadwalPeriksa', 'periksas'])
-            ->whereHas('jadwalPeriksa', function ($query) use ($dokterId) {
-                $query->where('id_dokter', $dokterId);
-            })
-            ->orderBy('no_antrian')
+        $daftarPoli = DaftarPoli::with('pasien')
+            ->orderBy('no_antrian', 'asc')
             ->get();
 
-        return view('dokter.periksa-pasien.index', compact('daftarPasien'));
+        return view('dokter.periksa_pasien.index', compact('daftarPoli'));
     }
 
-
-   public function create($id)
+    /**
+     * Form periksa pasien
+     */
+    public function create($id_daftar_poli)
     {
         $obats = Obat::all();
-        return view('dokter.periksa-pasien.create', compact('obats', 'id'));
+
+        return view(
+            'dokter.periksa_pasien.create',
+            compact('obats', 'id_daftar_poli')
+        );
     }
 
-
-
-public function store(Request $request)
+    /**
+     * Simpan hasil periksa
+     */
+    public function store(Request $request)
     {
         $request->validate([
-            'obat_json' => 'required',
-            'catatan' => 'nullable|string',
-            'biaya_periksa' => 'required|integer',
+            'obat_json'      => 'required',
+            'catatan'        => 'nullable|string',
+            'biaya_periksa'  => 'required|integer',
+            'id_daftar_poli' => 'required|exists:daftar_poli,id',
         ]);
 
-        $obatIds = json_decode($request->obat_json, true);
+        $obatIds    = json_decode($request->obat_json, true);
+        $totalBiaya = $request->biaya_periksa;
 
         $periksa = Periksa::create([
             'id_daftar_poli' => $request->id_daftar_poli,
-            'tgl_periksa' => now(),
-            'catatan' => $request->catatan,
-            'biaya_periksa' => $request->biaya_periksa + 150000,
+            'tgl_periksa'    => now(),
+            'catatan'        => $request->catatan,
+            'biaya_periksa'  => 0,
+            'status'         => 'selesai',
         ]);
 
         foreach ($obatIds as $idObat) {
+            $obat = Obat::findOrFail($idObat);
+
+            if ($obat->stok <= 0) {
+                return redirect()->back()
+                    ->with('error', "Stok obat {$obat->nama_obat} habis!");
+            }
+
             DetailPeriksa::create([
                 'id_periksa' => $periksa->id,
-                'id_obat' => $idObat,
+                'id_obat'    => $idObat,
             ]);
+
+            $obat->stok -= 1;
+            $obat->save();
+
+            $totalBiaya += $obat->harga;
         }
 
-        return redirect()->route('periksa-pasien.index')->with('success', 'Data periksa berhasil disimpan.');
-    }
+        $periksa->update([
+            'biaya_periksa' => $totalBiaya
+        ]);
 
+        return redirect()
+            ->route('riwayat-pasien.index')
+            ->with('success', 'Periksa pasien berhasil disimpan');
+    }
 }

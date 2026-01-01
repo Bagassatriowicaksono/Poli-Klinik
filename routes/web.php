@@ -1,64 +1,118 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\dokter\PeriksaPasienController;
-use App\Http\Controllers\Dokter\JadwalPeriksaController as DokterJadwalPeriksaController;
-use App\Http\Controllers\dokter\RiwayatPasienController;
-use App\Http\Controllers\Admin\DokterController;
-use App\Http\Controllers\Admin\ObatController;
-use App\Http\Controllers\Pasien\PoliController as PasienPoliController;
-use App\Http\Controllers\Admin\PasienController;
-use App\Http\Controllers\Admin\PoliController;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\AuthController;
+
+// ADMIN
+use App\Http\Controllers\Admin\DokterController;
+use App\Http\Controllers\Admin\ObatController;
+use App\Http\Controllers\Admin\PasienController;
+use App\Http\Controllers\Admin\PoliController;
+
+// DOKTER
+use App\Http\Controllers\Dokter\PeriksaPasienController;
+use App\Http\Controllers\Dokter\JadwalPeriksaController as DokterJadwalPeriksaController;
+use App\Http\Controllers\Dokter\RiwayatPasienController;
+
+// PASIEN
+use App\Http\Controllers\Pasien\PoliController as PasienPoliController;
+
+/*
+|--------------------------------------------------------------------------
+| HALAMAN UMUM
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
-    return view('welcome'); // atau arahkan ke view lain
+    return view('welcome');
 });
 
-
-
+/*
+|--------------------------------------------------------------------------
+| AUTH
+|--------------------------------------------------------------------------
+*/
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function (){
-    Route::get('/dashboard', function(){
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
-    Route::resource('polis', PoliController::class);
-    Route::resource('dokter', DokterController::class);
-    Route::resource('pasien', PasienController::class);
-    Route::resource('obat', ObatController::class);
-});
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->group(function () {
 
-// Route::resource('polis', PoliController::class)->middleware('admin');
+        Route::get('/dashboard', function () {
+            return view('admin.dashboard');
+        })->name('admin.dashboard');
 
-Route::middleware(['auth', 'role:dokter'])->prefix('dokter')->group( function(){
-    Route::get('/dashboard', function(){
-        return view('dokter.dashboard');
-    })->name('dokter.dashboard');
-    Route::resource('jadwal-periksa', DokterJadwalPeriksaController::class);
-    Route::get('/periksa-pasien', [PeriksaPasienController::class, 'index'])->name('periksa-pasien.index');
-    Route::post('/periksa-pasien', [PeriksaPasienController::class, 'store'])->name('periksa-pasien.store');
-    Route::get('/periksa-pasien/{id}', [PeriksaPasienController::class, 'create'])->name('periksa-pasien.create');
+        Route::resource('polis', PoliController::class);
+        Route::resource('dokter', DokterController::class);
+        Route::resource('pasien', PasienController::class);
+        Route::resource('obat', ObatController::class);
 
-    Route::get('/riwayat-pasien', [RiwayatPasienController::class, 'index'])->name('riwayat-pasien.index');
-    Route::get('/riwayat-pasien/{id}', [RiwayatPasienController::class, 'show'])->name('riwayat-pasien.show');
+        // stok obat
+        Route::get('/obat/stok', [ObatController::class, 'stokIndex'])
+            ->name('obat.stok.index');
 
-});
+        Route::post('/obat/stok/{id}/update', [ObatController::class, 'updateStok'])
+            ->name('obat.stok.update');
+    });
 
+/*
+|--------------------------------------------------------------------------
+| DOKTER
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:dokter'])
+    ->prefix('dokter')
+    ->group(function () {
 
-Route::middleware(['auth','role:pasien'])->prefix('/pasien')->group( function() {
-    Route::get('/dashboard', function(){
-        return view('pasien.dashboard');
-    })->name('pasien.dashboard');
-    Route::get('/daftar', [PasienPoliController::class,'get'])->name('pasien.daftar');
-    Route::post('/daftar', [PasienPoliController::class,'submit'])->name('pasien.daftar.submit');
-});
+        Route::get('/dashboard', function () {
+            return view('dokter.dashboard');
+        })->name('dokter.dashboard');
 
+        Route::resource('jadwal-periksa', DokterJadwalPeriksaController::class);
 
-// Route::get('/dokter', [AuthController::class,'dokter']);
+        Route::get('/periksa-pasien', [PeriksaPasienController::class, 'index'])
+            ->name('periksa-pasien.index');
+
+        Route::get('/periksa-pasien/{id}', [PeriksaPasienController::class, 'create'])
+            ->name('periksa-pasien.create');
+
+        Route::post('/periksa-pasien', [PeriksaPasienController::class, 'store'])
+            ->name('periksa-pasien.store');
+
+        Route::get('/riwayat-pasien', [RiwayatPasienController::class, 'index'])
+            ->name('riwayat-pasien.index');
+
+        Route::get('/riwayat-pasien/{id}', [RiwayatPasienController::class, 'show'])
+            ->name('riwayat-pasien.show');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| PASIEN
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:pasien'])
+    ->prefix('pasien')
+    ->group(function () {
+
+        Route::get('/dashboard', function () {
+            return view('pasien.dashboard');
+        })->name('pasien.dashboard');
+
+        Route::get('/daftar', [PasienPoliController::class, 'get'])
+            ->name('pasien.daftar');
+
+        Route::post('/daftar', [PasienPoliController::class, 'submit'])
+            ->name('pasien.daftar.submit');
+    });

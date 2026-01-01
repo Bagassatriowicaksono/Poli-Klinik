@@ -12,16 +12,17 @@ class Periksa extends Model
         'id_daftar_poli',
         'tgl_periksa',
         'catatan',
-        'biaya_periksa'
+        'biaya_periksa',
+        'status', // tambah status
     ];
 
-    public function daftarPoli(){
+    public function daftarPoli()
+    {
         return $this->belongsTo(DaftarPoli::class, 'id_daftar_poli');
     }
 
-    public function detailPeriksas(){
+    public function detailPeriksas()
+    {
         return $this->hasMany(DetailPeriksa::class, 'id_periksa');
     }
 }
-
-

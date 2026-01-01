@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use HasFactory, Notifiable;
+
     protected $fillable = [
         'nama',
         'alamat',
@@ -34,11 +35,19 @@ class User extends Authenticatable
         ];
     }
 
-    public function poli(){
+    public function poli()
+    {
         return $this->belongsTo(Poli::class, 'id_poli');
     }
 
-    public function jadwalPeriksas(){
+    public function jadwalPeriksas()
+    {
         return $this->hasMany(JadwalPeriksa::class, 'id_dokter');
+    }
+
+    // Tambahkan relasi ke pendaftaran poli
+    public function daftarPoli()
+    {
+        return $this->hasMany(DaftarPoli::class, 'id_pasien');
     }
 }
